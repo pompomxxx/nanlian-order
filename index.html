@@ -1248,6 +1248,12 @@ function updateNavCart(){
   }
 }
 let _lbImgs=[],_lbIdx=0;
+function openLightboxById(id,idx){
+  const p=getProds().find(x=>x.id===id);
+  if(!p) return;
+  const imgs=[p.image,...(p.images||[])].filter(Boolean);
+  openLightbox(imgs,idx);
+}
 function openLightbox(imgs,idx){
   _lbImgs=Array.isArray(imgs)?imgs:[imgs];
   _lbIdx=idx||0;
@@ -1545,10 +1551,9 @@ function renderProducts(){
     if(!allImgs.length) allImgs.push(fb);
     const cidx=Math.min(_imgIdx[p.id]||0, allImgs.length-1);
     const multiImg=allImgs.length>1;
-    const imgsJson=JSON.stringify(allImgs).replace(/'/g,"\\'");
     return `<div class="card">
       <div class="card-img-wrap">
-        <img class="card-img" src="${allImgs[cidx]}" alt="${p.name}" onerror="this.src='${fb}'" onclick="openLightbox(${imgsJson},${cidx})">
+        <img class="card-img" src="${allImgs[cidx]}" alt="${p.name}" onerror="this.src='${fb}'" onclick="openLightboxById('${p.id}',${cidx})">
         ${multiImg?`<button class="carr-btn carr-prev" onclick="cardImgNav('${p.id}',-1,event)">‹</button><button class="carr-btn carr-next" onclick="cardImgNav('${p.id}',1,event)">›</button>`:''}
       </div>
       <div class="card-body">
