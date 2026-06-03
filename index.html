@@ -1390,6 +1390,13 @@ function renderProducts(){
   let prods=getProds().filter(p=>p.active!==false&&!hidBrands.includes(_pBrand(p)));
   if(activeBrand) prods=prods.filter(p=>_pBrand(p)===activeBrand);
   if(q) prods=prods.filter(p=>p.name.toLowerCase().includes(q)||p.code.toLowerCase().includes(q));
+  // 沒有任何批次有價格、也沒有商品售價，不顯示於前台
+  prods=prods.filter(p=>{
+    const upb=p.unitsPerBox||1;
+    const hasBatchPrice=(p.batches||[]).some(b=>b.pricePerUnit>0);
+    const hasBoxPrice=p.sellPrice>0||p.salePrice>0;
+    return hasBatchPrice||hasBoxPrice;
+  });
   const grid=document.getElementById('grid');
   const eh=document.getElementById('emptyHint');
   if(!prods.length){grid.innerHTML='';eh.style.display='block';return;}
