@@ -99,6 +99,11 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
 .card-qty .cq-btn:hover{background:#f0e8d8}
 .card-qty .cq-num{min-width:30px;text-align:center;font-size:13px;font-weight:700;color:#6d4c1f}
 .empty-hint{text-align:center;color:#aaa;padding:60px 20px;font-size:15px}
+/* LIGHTBOX */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);object-fit:contain}
+.card-img{cursor:zoom-in}
 
 /* CART PANEL */
 .cart-hdr{padding:16px 16px 10px;border-bottom:1px solid #eee;font-size:15px;font-weight:700;color:#6d4c1f}
@@ -258,6 +263,7 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
   <button class="nav-btn active" id="navShop" onclick="showView('shop')">商品訂購</button>
   <button id="adminGear" onclick="showView('admin')" title="">⚙️</button>
 </nav>
+<div id="lightbox" onclick="closeLightbox()"><img id="lightboxImg" src="" alt=""></div>
 <button class="cart-fab" id="cartFab" onclick="goStep(2)">
   🛒<span class="fab-cnt" id="fabCnt">0</span>
 </button>
@@ -1215,6 +1221,16 @@ function updateNavCart(){
     fab.classList.remove('visible');
   }
 }
+function openLightbox(src){
+  document.getElementById('lightboxImg').src=src;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 function flyToCart(fromEl){
   const fab=document.getElementById('cartFab');
   if(!fab||!fromEl) return;
@@ -1470,7 +1486,7 @@ function renderProducts(){
     const priceIncl=pricePerUnit; // stored as 含稅
     const curQty=_cardQty[p.id]||1;
     return `<div class="card">
-      <img class="card-img" src="${p.image||fb}" alt="${p.name}" onerror="this.src='${fb}'">
+      <img class="card-img" src="${p.image||fb}" alt="${p.name}" onerror="this.src='${fb}'" onclick="openLightbox(this.src)">
       <div class="card-body">
         <div class="p-name" style="margin-top:4px">${p.name}</div>
         ${bHtml}
