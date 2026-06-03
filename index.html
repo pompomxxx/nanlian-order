@@ -42,6 +42,9 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
 /* fly-dot animation */
 .fly-dot{position:fixed;width:14px;height:14px;background:#e53935;border-radius:50%;pointer-events:none;z-index:9999;transition:none}
 @keyframes flyArc{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.3)}}
+/* ADMIN GEAR */
+#adminGear{position:fixed;bottom:24px;left:20px;background:none;border:none;font-size:20px;opacity:.18;cursor:pointer;z-index:200;padding:4px;transition:opacity .2s;line-height:1}
+#adminGear:hover{opacity:.55}
 /* CART REVIEW */
 .cr-item{padding:12px 0;border-bottom:1px solid #f0f0f0}
 .cr-name{font-size:13px;font-weight:600;line-height:1.4}
@@ -253,11 +256,11 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
 <nav>
   <h1><img src="logo.png" alt="南聯" style="height:38px;vertical-align:middle;margin-right:10px;background:#fff;border-radius:4px;padding:2px 4px" onerror="this.style.display='none'"> 南聯公司 零售訂貨系統 <span id="_fbDot" title="連線中…" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9800;vertical-align:middle;margin-left:6px"></span></h1>
   <button class="nav-btn active" id="navShop" onclick="showView('shop')">商品訂購</button>
-  <button class="nav-btn" id="navAdmin" onclick="showView('admin')">管理後台</button>
 </nav>
 <button class="cart-fab" id="cartFab" onclick="goStep(2)">
   🛒<span class="fab-cnt" id="fabCnt">0</span>
 </button>
+<button id="adminGear" onclick="showView('admin')" title="">⚙️</button>
 
 <!-- ===== SHOP VIEW ===== -->
 <div class="view active" id="shopView">
