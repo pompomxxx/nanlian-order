@@ -33,9 +33,15 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
 .step-back{background:none;border:none;color:#1a237e;cursor:pointer;font-size:13px;font-family:inherit;padding:6px 0}
 .step-back:hover{text-decoration:underline}
 /* CART FAB */
-.cart-fab{position:fixed;bottom:28px;right:24px;background:#1a237e;color:#fff;border:none;border-radius:50px;padding:12px 22px;font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(26,35,126,.35);z-index:200;transition:background .2s}
+.cart-fab{position:fixed;bottom:28px;right:24px;background:#1a237e;color:#fff;border:none;border-radius:50%;width:62px;height:62px;font-size:26px;font-family:inherit;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(26,35,126,.45);z-index:200;transition:background .2s,transform .15s}
 .cart-fab:hover{background:#283593}
-.fab-cnt{background:#e53935;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.cart-fab.visible{display:flex}
+.fab-cnt{position:absolute;top:-4px;right:-4px;background:#e53935;color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+@keyframes fabBounce{0%{transform:scale(1)}40%{transform:scale(1.35)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+.cart-fab.bounce{animation:fabBounce .4s ease}
+/* fly-dot animation */
+.fly-dot{position:fixed;width:14px;height:14px;background:#e53935;border-radius:50%;pointer-events:none;z-index:9999;transition:none}
+@keyframes flyArc{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.3)}}
 /* CART REVIEW */
 .cr-item{padding:12px 0;border-bottom:1px solid #f0f0f0}
 .cr-name{font-size:13px;font-weight:600;line-height:1.4}
@@ -248,8 +254,10 @@ nav h1{flex:1;font-size:17px;font-weight:700;letter-spacing:.5px}
   <h1><img src="logo.png" alt="南聯" style="height:38px;vertical-align:middle;margin-right:10px;background:#fff;border-radius:4px;padding:2px 4px" onerror="this.style.display='none'"> 南聯公司 零售訂貨系統 <span id="_fbDot" title="連線中…" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff9800;vertical-align:middle;margin-left:6px"></span></h1>
   <button class="nav-btn active" id="navShop" onclick="showView('shop')">商品訂購</button>
   <button class="nav-btn" id="navAdmin" onclick="showView('admin')">管理後台</button>
-  <button class="nav-btn" id="navCart" onclick="goStep(2)" style="display:none;background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);padding:6px 16px;font-weight:700">&#x1F6D2; <span id="navCartCnt">0</span>件 &nbsp;<span id="navCartAmt">$0</span></button>
 </nav>
+<button class="cart-fab" id="cartFab" onclick="goStep(2)">
+  🛒<span class="fab-cnt" id="fabCnt">0</span>
+</button>
 
 <!-- ===== SHOP VIEW ===== -->
 <div class="view active" id="shopView">
@@ -1192,18 +1200,38 @@ function goStep(n){
 }
 
 function updateNavCart(){
-  const btn=document.getElementById('navCart');
-  if(!btn) return;
+  const fab=document.getElementById('cartFab');
+  const cntEl=document.getElementById('fabCnt');
+  if(!fab) return;
   const inShop=document.getElementById('shopView').classList.contains('active');
   if(cart.length>0 && inShop && shopStep===1){
     const totalQty=cart.reduce((s,i)=>s+i.qty,0);
-    const {total}=cartTotals();
-    document.getElementById('navCartCnt').textContent=totalQty;
-    document.getElementById('navCartAmt').textContent='$'+fmt(total);
-    btn.style.display='';
+    cntEl.textContent=totalQty;
+    fab.classList.add('visible');
   } else {
-    btn.style.display='none';
+    fab.classList.remove('visible');
   }
+}
+function flyToCart(fromEl){
+  const fab=document.getElementById('cartFab');
+  if(!fab||!fromEl) return;
+  const sr=fromEl.getBoundingClientRect();
+  const tr=fab.getBoundingClientRect();
+  const dot=document.createElement('div');
+  dot.className='fly-dot';
+  dot.style.cssText=`left:${sr.left+sr.width/2-7}px;top:${sr.top+sr.height/2-7}px`;
+  document.body.appendChild(dot);
+  const dx=tr.left+tr.width/2-7-(sr.left+sr.width/2-7);
+  const dy=tr.top+tr.height/2-7-(sr.top+sr.height/2-7);
+  dot.animate([
+    {transform:'translate(0,0) scale(1)',opacity:1},
+    {transform:`translate(${dx}px,${dy}px) scale(.3)`,opacity:0}
+  ],{duration:500,easing:'cubic-bezier(.2,.8,.4,1)'}).onfinish=()=>{
+    dot.remove();
+    fab.classList.remove('bounce');
+    void fab.offsetWidth;
+    fab.classList.add('bounce');
+  };
 }
 function renderCheckoutBankInfo(){
   const b=getBankInfo();
@@ -1274,7 +1302,7 @@ function setCardQty(id,d){
   if(el) el.textContent=_cardQty[id];
 }
 
-function addToCart(id){
+function addToCart(id, btn){
   const prods=getProds();
   const p=prods.find(x=>x.id===id);
   if(!p) return;
@@ -1315,6 +1343,7 @@ function addToCart(id){
   _cardQty[id]=1; // reset picker
   renderCart();
   renderProducts(); // update qty display on card
+  flyToCart(btn);
   toast(`已加入 ${addQty} 件`);
 }
 
@@ -1453,7 +1482,7 @@ function renderProducts(){
             <span class="cq-num" id="cqty_${p.id}">${curQty}</span>
             <button class="cq-btn" onclick="setCardQty('${p.id}',1)">+</button>
           </div>`}
-          <button class="add-btn" ${out?'disabled':''} onclick="addToCart('${p.id}')">${out?'已缺貨':'加入訂單'}</button>
+          <button class="add-btn" ${out?'disabled':''} onclick="addToCart('${p.id}',this)">${out?'已缺貨':'加入訂單'}</button>
         </div>
       </div>
     </div>`;
