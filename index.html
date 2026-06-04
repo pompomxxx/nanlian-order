@@ -1737,12 +1737,22 @@ function changePw(){
   const cur=document.getElementById('sPwCur').value;
   const nw=document.getElementById('sPwNew').value;
   const cn=document.getElementById('sPwCon').value;
-  if(cur!==getPw()){ toast('目前密碼錯誤'); return; }
-  if(nw.length<4){ toast('新密碼至少4碼'); return; }
+  if(nw.length<6){ toast('新密碼至少6碼'); return; }
   if(nw!==cn){ toast('新密碼不一致'); return; }
-  save(SK.pw,nw);
-  toast('密碼已更新');
-  ['sPwCur','sPwNew','sPwCon'].forEach(i=>document.getElementById(i).value='');
+  const user=firebase.auth().currentUser;
+  if(!user){ toast('請先登入'); return; }
+  // 先重新驗證舊密碼，再更新
+  const cred=firebase.auth.EmailAuthProvider.credential(user.email, cur);
+  user.reauthenticateWithCredential(cred)
+    .then(()=>user.updatePassword(nw))
+    .then(()=>{
+      toast('✅ 密碼已更新！');
+      ['sPwCur','sPwNew','sPwCon'].forEach(i=>document.getElementById(i).value='');
+    })
+    .catch(err=>{
+      if(err.code==='auth/wrong-password'||err.code==='auth/invalid-credential') toast('目前密碼錯誤');
+      else toast('更新失敗：'+err.message);
+    });
 }
 
 // ─── ADMIN: PRODUCTS ───────────────────────────────────────
