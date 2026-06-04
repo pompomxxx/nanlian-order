@@ -1081,11 +1081,21 @@ const _fbMap={
   'nl_contact':'contact','nl_hidBrands':'hidBrands','nl_pw':'password'
   // nl_orders 獨立處理，用 dict 結構避免多人同時下單互蓋
 };
-let _fbDb=null,_fbReady=false;
+let _fbDb=null,_fbReady=false,_authUser=null,_authReady=false;
 
 async function _initFirebase(){
   try{
     firebase.initializeApp(_fbCfg);
+    // 立刻設定 Auth 監聽，確保登入狀態隨時同步
+    firebase.auth().onAuthStateChanged(user=>{
+      _authUser=user;
+      _authReady=true;
+      if(user){
+        if(document.getElementById('adminView').classList.contains('active')) _showAdminPanel();
+      } else {
+        if(document.getElementById('adminView').classList.contains('active')) _showAdminLogin();
+      }
+    });
     _fbDb=firebase.database();
     // 從 Firebase 拉取最新資料覆蓋本機
     const snap=await _fbDb.ref('/').once('value');
@@ -1718,20 +1728,6 @@ function doLogout(){
   firebase.auth().signOut();
 }
 
-// 監聽登入狀態
-setTimeout(()=>{
-  try{
-    firebase.auth().onAuthStateChanged(user=>{
-      if(user){
-        _showAdminPanel();
-      } else {
-        if(document.getElementById('adminView').classList.contains('active')){
-          _showAdminLogin();
-        }
-      }
-    });
-  }catch(e){}
-},500);
 
 function changePw(){
   const cur=document.getElementById('sPwCur').value;
@@ -2417,8 +2413,7 @@ function showView(v){
   document.getElementById(v+'View').classList.add('active');
   document.getElementById('nav'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
   if(v==='admin'){
-    const user=firebase.auth&&firebase.auth().currentUser;
-    if(user){
+    if(_authUser){
       _showAdminPanel();
     } else {
       _showAdminLogin();
