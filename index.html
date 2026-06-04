@@ -1711,17 +1711,30 @@ function _showAdminLogin(){
 }
 
 function doLogin(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const pw=document.getElementById('loginPw').value;
-  const errEl=document.getElementById('loginErr');
-  errEl.style.display='none';
-  if(!email||!pw){ toast('請輸入 Email 和密碼'); return; }
-  firebase.auth().signInWithEmailAndPassword(email,pw)
-    .then(()=>{ document.getElementById('loginPw').value=''; })
-    .catch(err=>{
-      errEl.textContent=err.code==='auth/invalid-credential'||err.code==='auth/wrong-password'||err.code==='auth/user-not-found'?'Email 或密碼錯誤':'登入失敗：'+err.message;
-      errEl.style.display='block';
-    });
+  try{
+    const email=document.getElementById('loginEmail').value.trim();
+    const pw=document.getElementById('loginPw').value;
+    const errEl=document.getElementById('loginErr');
+    errEl.style.display='none';
+    if(!email||!pw){ toast('請輸入 Email 和密碼'); return; }
+    if(typeof firebase==='undefined'||!firebase.auth){
+      errEl.textContent='Firebase 尚未載入，請重新整理頁面';
+      errEl.style.display='block'; return;
+    }
+    toast('登入中…');
+    firebase.auth().signInWithEmailAndPassword(email,pw)
+      .then(()=>{ document.getElementById('loginPw').value=''; })
+      .catch(err=>{
+        const code=err.code||'';
+        if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found'))
+          errEl.textContent='Email 或密碼錯誤';
+        else
+          errEl.textContent='登入失敗：'+err.message;
+        errEl.style.display='block';
+      });
+  }catch(e){
+    toast('錯誤：'+e.message);
+  }
 }
 
 function doLogout(){
