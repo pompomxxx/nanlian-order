@@ -1083,19 +1083,20 @@ const _fbMap={
 };
 let _fbDb=null,_fbReady=false,_authUser=null,_authReady=false;
 
+// 立刻同步初始化 Firebase App + Auth（不放在 async 裡）
+firebase.initializeApp(_fbCfg);
+firebase.auth().onAuthStateChanged(user=>{
+  _authUser=user;
+  _authReady=true;
+  if(user){
+    if(document.getElementById('adminView').classList.contains('active')) _showAdminPanel();
+  } else {
+    if(document.getElementById('adminView').classList.contains('active')) _showAdminLogin();
+  }
+});
+
 async function _initFirebase(){
   try{
-    firebase.initializeApp(_fbCfg);
-    // 立刻設定 Auth 監聽，確保登入狀態隨時同步
-    firebase.auth().onAuthStateChanged(user=>{
-      _authUser=user;
-      _authReady=true;
-      if(user){
-        if(document.getElementById('adminView').classList.contains('active')) _showAdminPanel();
-      } else {
-        if(document.getElementById('adminView').classList.contains('active')) _showAdminLogin();
-      }
-    });
     _fbDb=firebase.database();
     // 從 Firebase 拉取最新資料覆蓋本機
     const snap=await _fbDb.ref('/').once('value');
